@@ -1,893 +1,472 @@
-# 📱 PhoneBookLOCA v2.2
+# PhoneBookLOCA v2.2.1
 
 <div align="center">
 
-```ascii
-╔═══════════════════════════════════════════════════════════════╗
-║     PhoneBookLOCA v2.2 - Professional OSINT Platform          ║
-║     Worldwide Database + Advanced Intelligence Features       ║
-╚═══════════════════════════════════════════════════════════════╝
+```
+╔════════════════════════════════════════════════════════════════╗
+║  PhoneBookLOCA v2.2.1 — Full Open-Source OSINT Platform       ║
+║  Worldwide Database + Advanced Intelligence Features           ║
+╚════════════════════════════════════════════════════════════════╝
 ```
 
-**🌍 Professional-Grade OSINT Intelligence Platform with Worldwide Coverage**
+**Worldwide Phone Number OSINT — APIs · Social · Geolocation · Reports**
 
-[![Python Version](https://img.shields.io/badge/python-3.6+-blue.svg)](https://www.python.org/downloads/)
+[![Python Version](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![Go Version](https://img.shields.io/badge/go-1.19+-00ADD8.svg)](https://golang.org/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Status](https://img.shields.io/badge/status-active-success.svg)]()
-[![Coverage](https://img.shields.io/badge/coverage-200%2B%20countries-brightgreen.svg)]()
 
-*For educational, authorized security research, and law enforcement use only*
+*For authorized security research, penetration testing, and law enforcement use only.*
 
-[Features](#-features) • [Installation](#-installation) • [Usage](#-usage) • [What’s New](#-whats-new-in-v22)
+[Features](#features) • [Installation](#installation) • [Usage](#usage) • [Go Scraper](#go-scraper) • [API Keys](#api-keys) • [Changelog](#changelog)
 
 </div>
 
------
+---
 
-## 🎯 What is PhoneBookLOCA v2.2?
+## What is PhoneBookLOCA?
 
-PhoneBookLOCA v2.2 is a **professional-grade OSINT intelligence platform** for phone number reconnaissance with **worldwide database coverage** and **advanced analytics**. Created by DezTheJackal with continuous community enhancements.
+PhoneBookLOCA is an open-source OSINT platform for phone number intelligence. Feed it a number and it pulls carrier data, geolocation, social media presence, paste dump exposure, risk scoring, Google dorks, and structured HTML/JSON reports — all from a single command.
 
-### Evolution Timeline
+**Original tool:** DezTheJackal  
+**Enhanced v1.1–v2.2.1:** 0xb0rn3 | 0xb0rn3
 
-|Version |Key Features                                               |Developer       |
-|--------|-----------------------------------------------------------|----------------|
-|**v1.0**|Basic phone lookup, validation, carrier info               |**DezTheJackal**|
-|**v1.1**|OSINT queries, web scanning, API integration               |0xb0rn3 | 0xb0rn3 |
-|**v2.0**|SQLite caching, reputation engine, ML classification       |0xb0rn3 | 0xb0rn3 |
-|**v2.1**|🚨 Enhanced geolocation, LE tools, missing persons features |**DezTheJackal**|
-|**v2.2**|🌍 **Worldwide database, porting detection, batch analysis**|**DezTheJackal**|
+---
 
------
+## Version History
 
-## ✨ What’s New in v2.2
+| Version | Changes | Author |
+|---------|---------|--------|
+| v1.0 | Basic lookup, validation, carrier info | DezTheJackal |
+| v1.1 | Go web scraper, API integration, concurrent OSINT | 0xb0rn3 \| 0xb0rn3 |
+| v2.0 | SQLite caching, reputation engine, risk classification | 0xb0rn3 \| 0xb0rn3 |
+| v2.1 | Enhanced geolocation, LE mode, missing persons features | DezTheJackal |
+| v2.2 | Worldwide area-code DB, porting detection, batch analysis | DezTheJackal |
+| **v2.2.1** | **Schema migration fix, HTML render fix, theHarvester bridge** | **0xb0rn3 \| 0xb0rn3** |
 
-### 🌍 **Worldwide Database (Added by DezTheJackal)**
+---
 
-- **200+ countries** with comprehensive coverage
-- **Major cities worldwide** with accurate coordinates
-- **US/Canada expanded** - All 50 states + provinces
-- **Europe** - UK, Germany, France, Spain, Italy, etc.
-- **Asia** - Japan, China, India, South Korea, etc.
-- **Americas** - Brazil, Mexico, Argentina, etc.
-- **Middle East** - UAE, Saudi Arabia, Israel, Turkey
-- **Africa** - South Africa, Egypt, Nigeria, Kenya
-- **Oceania** - Australia, New Zealand
+## Features
 
-```bash
-# Now works worldwide!
-./PhoneBookLOCA +442071234567    # London, UK
-./PhoneBookLOCA +81312345678     # Tokyo, Japan
-./PhoneBookLOCA +61298765432     # Sydney, Australia
-./PhoneBookLOCA +33145678901     # Paris, France
-```
+### Core Intelligence
 
-### 📡 **OpenCellID Integration (Optional)**
+- **Phone parsing & validation** via `phonenumbers` — carrier, type, timezone, country
+- **Worldwide area-code database** — 80+ cities across North America, Europe, Asia, Africa, Middle East, Latin America, Oceania
+- **Enhanced geolocation** — coordinate resolution from area code with ~50 km radius
+- **Number porting detection** — flags VoIP and MVNO carriers as likely-ported
 
-- **40 million+ cell towers** worldwide
-- **Free API** with registration (1000 req/day)
-- **Real tower data** instead of samples
-- **Much better precision** (±5 km vs ±50 km)
-- **Automatic integration** when API key configured
+### OSINT Pipeline (`osint <number>`)
 
-```bash
-# Enable OpenCellID
-export OPENCELLID_API_KEY="your_key_here"
-./PhoneBookLOCA +14155552671 --geo
+Runs four stages concurrently:
 
-# Output includes real tower data:
-📡 Cell Towers: 5 nearby
-Primary Tower:
-  • Distance: 2.3 km
-  • Range: 1.5 km
-  • Samples: 1547
-```
+1. **Multi-API enrichment** — queries NumVerify, AbstractAPI, APILayer, Twilio Lookup, OSINT.club, and community caller/spam databases concurrently via `ThreadPoolExecutor`. Degrades gracefully — missing API keys skip that source, no crash.
+2. **Social media probe** — public-endpoint checks across WhatsApp, Telegram, TrueCaller, Facebook, Twitter/X, Instagram, LinkedIn, and Pastebin dump indexes
+3. **theHarvester bridge** — optional extended OSINT; if `theHarvester` is installed it runs silently as a subprocess against the number's carrier domain, extracting emails, hosts, and social references
+4. **Profile build** — risk scoring (0–100), inferred attributes, 18 Google dorks, and lookup links aggregated into one structured object
 
-### 🔄 **Number Porting Detection**
+### Go Web Scraper (`scraper.go`)
 
-- **Detects carrier changes** automatically
-- **Confidence scoring** (0-100%)
-- **Warning system** for ported numbers
-- **Historical tracking** of carrier changes
-- **Critical for LE** - Area code may be wrong if ported
+A standalone concurrent scraper written in Go — separate from the Python pipeline. See [Go Scraper](#go-scraper) for build instructions and integration details.
 
-```bash
-⚠️ Porting Detected:
-Confidence: 75%
-  • Carrier mismatch: Expected AT&T, found Verizon
-  • MVNO carrier detected
-  • Number likely ported - location may not match area code
-```
+### Reports
 
-### 📊 **Batch Analysis & Pattern Detection**
+- **JSON** — full structured profile saved to `~/.phonebookloca/reports/`
+- **HTML** — self-contained report with risk badge, social table, dork links, and OSINT resource links
+- Auto-saved on `osint`, `html`, and `le-mode` commands
 
-- **Analyze multiple numbers** at once
-- **Geographic clustering** detection
-- **Burner farm identification** (same carrier)
-- **Risk scoring** with confidence levels
-- **Pattern detection** for organized crime
+### Batch Analysis
 
-```bash
-# Create file with numbers
-./PhoneBookLOCA --batch numbers.txt
+- Process a file of numbers in one run
+- Pattern detection: same-carrier clustering (possible bulk SIM), geographic clustering
+- Per-number reports when run with `--osint`
 
-# Output:
-[!] Suspicious Patterns Detected:
-  • High geographic clustering: 15 numbers in 2 locations
-  • All 15 numbers on same carrier - possible bulk purchase
-  • High VoIP usage: 12/15 numbers are VoIP
-Risk Level: High
-```
+### Law Enforcement Mode
 
-### 🔍 **Enhanced OSINT Automation**
+- Structured case intake: case number, officer, agency
+- All LE cases stored in SQLite
+- Automatically runs full OSINT profile + exports both JSON and HTML
 
-- **Automated search queries** generation
-- **Social media presence** checking
-- **Data breach** correlation hints
-- **Investigative recommendations**
-- **Lookup URL generation** for multiple services
+### Database & Caching
 
-### 📜 **Historical Tracking System**
+- **SQLite backend** at `~/.phonebookloca/intel.db`
+- Lookup cache with hit counter and timestamp
+- Search history log (number, carrier, location, timestamp)
+- Profile storage (full OSINT output per number)
+- LE case tracker
+- **v2.2.1: automatic schema migration** — existing databases from older versions are patched in-place on startup; no data loss, no manual intervention needed
 
-- **Tracks all lookups** with timestamps
-- **Carrier change detection** over time
-- **Location movement** tracking
-- **Agency/case correlation**
-- **Pattern analysis** across investigations
+---
 
-### 🔌 **Real-Time Carrier Integration (Framework)**
-
-- **Emergency ping** request framework
-- **CDR request** submission system
-- **Carrier contact database** built-in
-- **Legal procedure** documentation
-- **Note:** Requires LE credentials for actual use
-
------
-
-## 🎨 Complete Feature Matrix
-
-<table>
-<tr>
-<td width="50%">
-
-### 🌍 Geographic Intelligence
-
-- ✅ **200+ countries** coverage
-- ✅ Worldwide area code database
-- ✅ Accurate coordinates (lat/lon)
-- ✅ City, region, country data
-- ✅ Population & timezone info
-- ✅ OpenCellID integration (40M+ towers)
-- ✅ Cell tower proximity analysis
-- ✅ Distance calculations
-
-### 🔍 Advanced Analysis
-
-- ✅ **Number porting detection**
-- ✅ **Batch pattern analysis**
-- ✅ Geographic clustering
-- ✅ Burner farm detection
-- ✅ Risk scoring (0-100)
-- ✅ Confidence levels
-- ✅ Historical tracking
-- ✅ Carrier change detection
-
-</td>
-<td width="50%">
-
-### 🚨 Law Enforcement Tools
-
-- ✅ **Interactive LE mode**
-- ✅ Case tracking & management
-- ✅ Professional reports (JSON/CSV/HTML)
-- ✅ Carrier legal contacts
-- ✅ Emergency ping framework
-- ✅ CDR request system
-- ✅ Investigative recommendations
-- ✅ Map link generation
-
-### 📊 Intelligence Features
-
-- ✅ **Enhanced OSINT automation**
-- ✅ Social media queries
-- ✅ Data breach hints
-- ✅ Reputation scoring
-- ✅ VoIP/disposable detection
-- ✅ ML-powered classification
-- ✅ Rich terminal UI
-- ✅ SQLite caching (10x faster)
-
-</td>
-</tr>
-</table>
-
------
-
-## 🚀 Installation
-
-### Quick Start
-
-```bash
-# Clone repository
-git clone https://github.com/DezTheJackal/PhoneBookLOCA.git
-cd PhoneBookLOCA
-
-# Install dependencies
-pip3 install phonenumbers requests rich
-
-# Make executable
-chmod +x PhoneBookLOCA
-
-# Test it
-./PhoneBookLOCA +14155552671
-```
-
-### System-Wide Installation
-
-```bash
-# Install globally
-sudo ./install.sh
-# Choose option 2
-
-# Use from anywhere
-phonebookloca +14155552671
-```
+## Installation
 
 ### Requirements
 
 ```
-phonenumbers>=8.12.0    # Core phone number functionality
-requests>=2.25.0        # HTTP requests  
-rich>=13.0.0            # Enhanced terminal UI (optional but recommended)
+Python 3.8+
+Go 1.19+   (only needed to build scraper.go)
 ```
 
-### Optional: OpenCellID Setup
-
-For **much better precision** with real cell tower data:
-
-1. Register at https://opencellid.org/
-1. Get free API key (1000 requests/day)
-1. Set environment variable:
+### Python dependencies
 
 ```bash
-# Linux/Mac
-export OPENCELLID_API_KEY="your_key_here"
-echo 'export OPENCELLID_API_KEY="your_key"' >> ~/.bashrc
-
-# Windows
-set OPENCELLID_API_KEY=your_key_here
+pip3 install phonenumbers requests rich
 ```
 
-1. Run normally - tool auto-detects and uses API
-
------
-
-## 💡 Usage
-
-### Basic Lookup (Worldwide)
+Or via the included requirements file:
 
 ```bash
-# United States
+pip3 install -r requirements.txt
+```
+
+`rich` is optional but strongly recommended — without it the tool falls back to plain ANSI output.
+
+### Quick start
+
+```bash
+git clone https://github.com/DezTheJackal/PhoneBookLOCA.git
+cd PhoneBookLOCA
+pip3 install -r requirements.txt
+chmod +x PhoneBookLOCA
 ./PhoneBookLOCA +14155552671
-
-# United Kingdom
-./PhoneBookLOCA +442071234567
-
-# Japan
-./PhoneBookLOCA +81312345678
-
-# Australia
-./PhoneBookLOCA +61298765432
-
-# Germany
-./PhoneBookLOCA +493012345678
-
-# Output:
-📊 Basic Intelligence
-Country: United States (+1)
-Carrier: Verizon Wireless
-Type: Mobile
-Timezone(s): America/Los_Angeles
 ```
 
-### Enhanced Geolocation
+### Optional: theHarvester
+
+Enables extended domain OSINT in the `osint` pipeline.
 
 ```bash
-./PhoneBookLOCA +14155552671 --geo
+# Kali / Debian
+sudo apt install theharvester
 
-# Output includes:
-📍 Enhanced Geolocation
-Precision: area_code
-Confidence: 70%
-Radius: ±50 km
-
-Coordinates:
-  Lat: 37.774929
-  Lon: -122.419418
-
-Location:
-  City: San Francisco
-  Region: California
-  Country: United States
-
-📡 Cell Towers: 5 nearby (if OpenCellID enabled)
-
-⚠️ Porting Analysis:
-Likely Ported: Yes
-Confidence: 75%
-
-📜 Historical Data:
-First seen: 2024-11-15
-Total lookups: 8
-Carrier changes: Detected
+# pip
+pip3 install theHarvester
 ```
 
-### Batch Analysis
+The tool auto-detects it on startup — no configuration required.
 
-Create `numbers.txt`:
+---
 
-```
-+14155552671
-+12125552671
-+13105552671
-+14695552671
-+17135552671
-```
+## Usage
 
-Run:
+### Command-line flags
 
 ```bash
+./PhoneBookLOCA <number>                  # Basic lookup (cached)
+./PhoneBookLOCA <number> --geo            # + enhanced geolocation + porting check
+./PhoneBookLOCA <number> --osint          # Full OSINT pipeline + JSON report
+./PhoneBookLOCA <number> --osint --html   # + HTML report
+./PhoneBookLOCA <number> --no-cache       # Skip cache, fresh fetch
+./PhoneBookLOCA <number> --dorks          # Print dorks and exit
+./PhoneBookLOCA --batch numbers.txt       # Batch lookup
+./PhoneBookLOCA --batch numbers.txt --osint  # Batch + full OSINT per number
+./PhoneBookLOCA --le-mode                 # Law enforcement intake
+./PhoneBookLOCA --keys                    # Show API key status
+./PhoneBookLOCA --version                 # Print version
+```
+
+### Interactive mode
+
+Run `./PhoneBookLOCA` with no arguments to enter the interactive shell:
+
+```
+PhoneBook> +255787066570          # Basic lookup
+PhoneBook> geo +255787066570      # Enhanced geolocation
+PhoneBook> osint +255787066570    # Full OSINT profile + HTML report
+PhoneBook> html +255787066570     # Same as osint — always exports HTML
+PhoneBook> dorks +255787066570    # Print dorks
+PhoneBook> batch numbers.txt      # Batch from file
+PhoneBook> le-mode                # LE case intake
+PhoneBook> keys                   # API key status
+PhoneBook> help                   # Command reference
+PhoneBook> quit                   # Exit
+```
+
+### Example output: basic lookup
+
+```
+╭─────── Basic Intel ───────╮
+│ Location   Tanzania        │
+│ Code       +255            │
+│ Carrier    Vodacom         │
+│ Type       Mobile          │
+│ Timezone   Africa/Dar_es.. │
+╰───────────────────────────╯
+```
+
+### Example output: OSINT profile
+
+```
+[*] Querying OSINT APIs…        ✓  2 source(s) responded
+[*] Probing social media…       ✓  1 confirmed hit(s)
+[*] Extended OSINT [vodacom.tz] ✓  3 email(s), 2 social ref(s)
+
+Risk: 35/100 — MEDIUM
+  ! VoIP number — commonly used for anonymisation
+  ! Number found in public paste dumps
+
+Social Media:
+  ✓ Truecaller   https://www.truecaller.com/search/us/...
+  ? WhatsApp     Inconclusive — verify manually
+  ✗ Pastebin     Not found in paste dumps
+
+[+] JSON report: ~/.phonebookloca/reports/profile_+255..._20250601.json
+[+] HTML report: ~/.phonebookloca/reports/profile_+255..._20250601.html
+```
+
+### Batch mode
+
+```bash
+# numbers.txt — one E.164 number per line
 ./PhoneBookLOCA --batch numbers.txt
 
-# Output:
-Batch Analysis: 5 numbers
-Valid Numbers: 5
-Risk Level: Medium
-Suspicious Patterns: 2
-
-[!] Suspicious Patterns Detected:
-  • High geographic clustering: 5 numbers in 2 locations
-  • All 5 numbers on same carrier - possible bulk purchase
-
-[+] Batch report saved: numbers_analysis.json
+# [*] Batch: 8 numbers
+# [!] All on same carrier: Vodacom — possible bulk SIM
+# [!] High geographic clustering detected
+# [+] Valid: 8/8 | Carriers: 1 | Locations: 2
 ```
 
-### Law Enforcement Mode
+### LE mode
 
 ```bash
 ./PhoneBookLOCA --le-mode
 
-# Interactive prompts:
-🚨 LAW ENFORCEMENT MODE
-Case Number: MP-2025-001
-Officer Name: Det. Smith
-Agency: SFPD
-Case Type: missing person
-Priority: high
+Case Number  : MP-2025-042
+Officer Name : Det. Mwangi
+Agency       : TPF
+Target Number: +255787066570
 
-Subject Phone Number: +14155552671
-
-[+] Case created: ID 1
-[*] Performing enhanced geolocation analysis...
-
-[Comprehensive analysis with:]
-- Enhanced geolocation
-- Porting detection
-- Historical tracking
-- Cell tower analysis
-- Carrier legal contacts
-- Investigative recommendations
-
-Export Options:
-  1) JSON    2) CSV    3) HTML    4) All    5) Skip
-
-[+] Reports saved to ~/.phonebookloca/reports/
+[+] Case created: MP-2025-042
+[*] Running full OSINT profile…
+[+] JSON report: ~/.phonebookloca/reports/profile_+255..._20250601.json
+[+] HTML report: ~/.phonebookloca/reports/profile_+255..._20250601.html
 ```
 
-### Interactive Mode
+---
+
+## Go Scraper
+
+`scraper.go` is a standalone concurrent web presence checker written in Go. It is **separate from the Python OSINT pipeline** — it does not run automatically when you use `osint` or `full_profile`. The Python tool has its own `SocialMediaProbe` class that handles social checks natively.
+
+The Go scraper is an independent component you build and run directly, or wire into your own workflow.
+
+### What it checks
+
+Concurrently hits 8 targets via goroutines: Google (dork generation), Facebook, LinkedIn, Twitter/X, Instagram, TrueCaller, Pastebin dump index, and GitHub code search.
+
+### Build
 
 ```bash
-./PhoneBookLOCA
-
-PhoneBook> +14155552671              # Standard lookup
-PhoneBook> geo +14155552671          # Enhanced geo
-PhoneBook> batch numbers.txt         # Batch analysis
-PhoneBook> osint +14155552671        # OSINT queries
-PhoneBook> le-mode                   # LE interface
-PhoneBook> help                      # Show commands
-PhoneBook> quit                      # Exit
+cd PhoneBookLOCA
+go build -o scraper scraper.go
 ```
 
-### OSINT Intelligence
+### Run
 
 ```bash
-./PhoneBookLOCA +14155552671 --osint --geo
-
-# Output includes:
-[+] OSINT Intelligence:
-  • Search queries generated (Google dorks)
-  • Social media check URLs
-  • Data breach recommendations
-  • Lookup service URLs
-  • Investigation suggestions
+./scraper +255787066570
 ```
 
------
+Output is clean JSON on stdout; progress goes to stderr so you can pipe the output directly:
 
-## 📊 What You Get
-
-### Standard Lookup
-
-```
-📊 Basic Intelligence
-Country: United States (+1)
-Location: San Francisco, CA
-Carrier: Verizon Wireless
-Type: Mobile
-Timezone(s): America/Los_Angeles
+```bash
+./scraper +255787066570 | jq .
+./scraper +255787066570 > results.json
 ```
 
-### Enhanced Geolocation (–geo)
-
-```
-📍 Enhanced Geolocation
-Precision: area_code
-Confidence: 70%
-Accuracy Radius: ±50 km
-
-Coordinates:
-  Latitude: 37.774929
-  Longitude: -122.419418
-
-Location:
-  City: San Francisco
-  County: San Francisco
-  Region: California
-  Country: United States
-  Timezone: America/Los_Angeles
-
-📡 Cell Towers: 5 nearby
-Primary Tower:
-  • ID: tower_sf_001
-  • Distance: 2.3 km
-  • Range: 5 km
-  • Technology: 5G, LTE
-
-⚠️ Porting Analysis:
-Likely Ported: Yes (75% confidence)
-Indicators:
-  • Carrier mismatch: Expected AT&T, found Verizon
-  • MVNO carrier detected
-Warning: Number likely ported - location may not match area code
-
-📜 Historical Data:
-First Seen: 2024-11-15 14:30:00
-Last Seen: 2025-01-20 10:15:00
-Total Lookups: 8
-Carrier Changes: Yes
-Carriers Seen: AT&T, Verizon Wireless
-Agencies: SFPD, FBI
-
-⚖️ Legal Notice:
-Public data only - For real-time tracking, obtain legal warrant
-```
-
-### Batch Analysis Report
+### Output format
 
 ```json
 {
-  "total_numbers": 15,
-  "valid_numbers": 15,
-  "geographic_clustering": {
-    "unique_locations": 2,
-    "most_common": [["San Francisco", 10], ["Oakland", 5]],
-    "clustering_score": 0.67
-  },
-  "carrier_patterns": {
-    "unique_carriers": 1,
-    "same_carrier_percentage": 100.0
-  },
-  "risk_assessment": {
-    "risk_score": 80,
-    "risk_level": "High",
-    "patterns_detected": 3
-  },
-  "suspicious_patterns": [
-    "High geographic clustering: 15 numbers in 2 locations",
-    "All 15 numbers on same carrier - possible bulk purchase",
-    "High VoIP usage: 12/15 numbers are VoIP"
-  ]
+  "phone_number": "+255787066570",
+  "timestamp": "2025-06-01T14:32:00+03:00",
+  "results": [
+    {
+      "source": "TrueCaller",
+      "url": "https://www.truecaller.com/search/us/%2B255787066570",
+      "found": true,
+      "snippet": "May have caller-ID listing",
+      "response_time": 0.84
+    }
+  ],
+  "summary": {
+    "total_sources": 8,
+    "found_in": 3,
+    "failed_sources": 1,
+    "platforms_found": ["TrueCaller", "Pastebin", "GitHub"]
+  }
 }
 ```
 
------
+### Limitations
 
-## 🎯 Use Cases
+Some sources (Google, Twitter/X, LinkedIn) block unauthenticated automated requests. The scraper documents this in its output and provides direct URLs for manual follow-up — it doesn't attempt auth bypass.
 
-### 🚨 Law Enforcement
+### Integrating with PhoneBookLOCA
 
-#### Missing Persons Investigations
-
-- **Initial location approximation** for deployment
-- **Case documentation** with professional reports
-- **Carrier contact info** for legal requests
-- **Search area calculation** based on precision
-- **Pattern detection** across multiple numbers
-- **Historical tracking** of subject movements
-
-#### Organized Crime / Trafficking
-
-- **Batch analysis** of suspect numbers
-- **Geographic clustering** detection
-- **Burner farm identification**
-- **Network relationship mapping**
-- **Temporal pattern analysis**
-
-#### Fraud Investigation
-
-- **VoIP/disposable detection**
-- **Porting pattern analysis**
-- **Carrier reputation checking**
-- **Geographic impossibility detection**
-
-### 🔍 Security Research
-
-#### OSINT Gathering
-
-- **Target reconnaissance**
-- **Social media correlation**
-- **Data breach checking**
-- **Attack surface mapping**
-
-#### Threat Intelligence
-
-- **Number pattern analysis**
-- **Geographic distribution**
-- **Carrier infrastructure mapping**
-- **Historical tracking**
-
------
-
-## 🌍 Worldwide Coverage
-
-### Regions Covered (200+ Countries)
-
-**North America:** 🇺🇸 🇨🇦 🇲🇽  
-All 50 US states, Canadian provinces, Mexico
-
-**Europe:** 🇬🇧 🇩🇪 🇫🇷 🇪🇸 🇮🇹 🇳🇱 🇧🇪 🇨🇭 🇦🇹 🇵🇱 🇸🇪 🇳🇴 🇩🇰 🇫🇮 🇮🇪  
-UK, Germany, France, Spain, Italy, Netherlands, Belgium, Switzerland, Austria, Poland, Sweden, Norway, Denmark, Finland, Ireland
-
-**Asia:** 🇯🇵 🇨🇳 🇮🇳 🇰🇷 🇹🇭 🇲🇾 🇸🇬 🇵🇭 🇻🇳 🇮🇩 🇵🇰 🇧🇩  
-Japan, China, India, South Korea, Thailand, Malaysia, Singapore, Philippines, Vietnam, Indonesia, Pakistan, Bangladesh
-
-**Middle East:** 🇦🇪 🇸🇦 🇮🇱 🇹🇷 🇮🇷  
-UAE, Saudi Arabia, Israel, Turkey, Iran
-
-**Americas (South):** 🇧🇷 🇦🇷 🇨🇱 🇨🇴 🇵🇪 🇻🇪  
-Brazil, Argentina, Chile, Colombia, Peru, Venezuela
-
-**Africa:** 🇿🇦 🇪🇬 🇳🇬 🇰🇪 🇲🇦  
-South Africa, Egypt, Nigeria, Kenya, Morocco
-
-**Oceania:** 🇦🇺 🇳🇿  
-Australia, New Zealand
-
------
-
-## 📖 Command Reference
-
-### Command Line Options
+To run both tools together in a shell pipeline:
 
 ```bash
-# Single lookup
-./PhoneBookLOCA <number>
-
-# Enhanced geolocation
-./PhoneBookLOCA <number> --geo
-
-# Batch analysis
-./PhoneBookLOCA --batch <file>
-
-# OSINT intelligence
-./PhoneBookLOCA <number> --osint --geo
-
-# Law enforcement mode
-./PhoneBookLOCA --le-mode
-
-# Disable cache
-./PhoneBookLOCA <number> --no-cache
-
-# Interactive mode (default)
-./PhoneBookLOCA
+NUMBER="+255787066570"
+./PhoneBookLOCA "$NUMBER" --osint
+./scraper "$NUMBER" | jq '.summary'
 ```
 
-### Interactive Commands
+A future version may invoke the compiled scraper binary as a subprocess within the Python `full_profile` pipeline alongside `HarvesterBridge`, returning its structured JSON into the unified profile.
 
-```
-<number>              Standard lookup
-geo <number>          Enhanced geolocation
-batch <file>          Batch analysis
-osint <number>        OSINT intelligence
-le-mode              Law enforcement interface
-help                 Show commands
-quit                 Exit
-```
+---
 
------
+## API Keys
 
-## 🔧 Advanced Features
+All keys are optional. The tool works without any — API sources are skipped gracefully when keys are absent.
 
-### OpenCellID Integration
-
-**Free API** - 1000 requests/day  
-**40M+ towers** worldwide  
-**Real data** vs samples
+### Environment variables
 
 ```bash
-# Setup
-export OPENCELLID_API_KEY="your_key"
-
-# Auto-enabled when key detected
-./PhoneBookLOCA +14155552671 --geo
+export NUMVERIFY_KEY="your_key"         # numverify.com — 100 req/mo free
+export ABSTRACTAPI_KEY="your_key"       # abstractapi.com — free tier
+export APILAYER_KEY="your_key"          # apilayer.com/marketplace/number_verification
+export OPENCELLID_API_KEY="your_key"    # opencellid.org — 1000 req/day free
+export TWILIO_ACCOUNT_SID="ACxxx"       # twilio.com — carrier lookup add-on
+export TWILIO_AUTH_TOKEN="your_token"
+export OSINT_CLUB_KEY="your_key"        # osint.club
 ```
 
-### Number Porting Detection
+### Config file
 
-Automatically detects:
+Alternatively, store keys in `~/.phonebookloca/config.json`:
 
-- Carrier mismatches
-- MVNO patterns
-- Historical porting
-- Confidence scoring
-
-### Batch Pattern Analysis
-
-Detects:
-
-- Geographic clustering
-- Burner farms (same carrier)
-- VoIP concentration
-- Impossible travel
-- Temporal patterns
-
-### Historical Tracking
-
-Tracks:
-
-- All lookups with timestamps
-- Carrier changes
-- Location movements
-- Agency access
-- Case associations
-
------
-
-## 📈 Performance
-
-|Operation          |v2.1     |v2.2                        |
-|-------------------|---------|----------------------------|
-|Standard lookup    |5-10s    |5-10s (first) / <1s (cached)|
-|Enhanced geo       |5-10s    |3-8s (with OpenCellID)      |
-|Batch (10 numbers) |N/A      |15-30s                      |
-|Batch (100 numbers)|N/A      |2-5min                      |
-|Worldwide coverage |US/Canada|200+ countries              |
-
-### Cache Hit Rates
-
-- **Investigation work:** 60-70%
-- **Monitoring:** 80-90%
-- **Historical analysis:** 95%+
-
------
-
-## 🔒 Legal & Privacy
-
-### ⚖️ What This Tool Does
-
-✅ Estimates location based on public data  
-✅ Identifies area code geographic assignment  
-✅ Detects number porting patterns  
-✅ Analyzes carrier infrastructure (public)  
-✅ Provides carrier legal contact info  
-✅ Generates investigative leads
-
-### ❌ What This Tool Does NOT Do
-
-❌ Provide real-time GPS tracking  
-❌ Access live carrier location data  
-❌ Bypass legal warrant requirements  
-❌ Guarantee precise device location  
-❌ Replace proper legal procedures
-
-### 📋 For Real-Time Tracking
-
-Law enforcement MUST:
-
-1. Obtain court order/warrant
-1. Contact carrier legal compliance
-1. Request emergency ping (life-threatening) OR CDR
-1. Follow 18 U.S.C. § 2703 procedures
-
-### Carrier Emergency Contacts (Built-in)
-
-- **Verizon:** 1-888-483-7200 (24/7)
-- **AT&T:** 1-800-635-6840 (24/7)
-- **T-Mobile:** 1-888-987-4500 (24/7)
-
------
-
-## 🛠️ Troubleshooting
-
-### Issue: Poor Worldwide Accuracy
-
-**Solution:**
-
-1. Enable OpenCellID for better precision
-1. Check if number has been ported
-1. Use `--no-cache` for fresh data
-1. Some countries have limited data
-
-### Issue: OpenCellID Not Working
-
-```bash
-# Check API key
-echo $OPENCELLID_API_KEY
-
-# Set if empty
-export OPENCELLID_API_KEY="your_key"
-
-# Test
-./PhoneBookLOCA +14155552671 --geo
+```json
+{
+  "NUMVERIFY_KEY":   "abc123",
+  "ABSTRACTAPI_KEY": "xyz789",
+  "APILAYER_KEY":    "def456",
+  "OPENCELLID_KEY":  "ghi012",
+  "TWILIO_SID":      "ACxxx",
+  "TWILIO_TOKEN":    "your_token",
+  "OSINT_CLUB_KEY":  "jkl345"
+}
 ```
 
-### Issue: Batch Analysis No Patterns
+Environment variables take priority over the config file.
 
-- Need minimum 5-10 numbers
-- Numbers must be valid
-- Patterns may not exist
-
-### Issue: Database Errors
+Check current key status at any time:
 
 ```bash
-# Rebuild database
+./PhoneBookLOCA --keys
+# or
+PhoneBook> keys
+```
+
+---
+
+## File Structure
+
+```
+PhoneBookLOCA/
+├── PhoneBookLOCA         # Main Python tool (chmod +x)
+├── scraper.go            # Standalone Go web scraper
+├── requirements.txt      # Python dependencies
+└── README.md
+```
+
+Runtime files (auto-created):
+
+```
+~/.phonebookloca/
+├── intel.db              # SQLite — cache, history, profiles, LE cases
+├── config.json           # API keys (optional)
+└── reports/              # JSON + HTML output files
+```
+
+---
+
+## Troubleshooting
+
+**`sqlite3.OperationalError: table lookups has no column named ts`**
+
+Your `intel.db` was created by an older version of the tool. Fixed in v2.2.1 — the migration runs automatically on startup. Just update to the latest version and rerun. If you prefer a clean slate:
+
+```bash
 rm ~/.phonebookloca/intel.db
 ./PhoneBookLOCA +14155552671
 ```
-'''
-### Issue: SyntaxError: invalid character '"' (U+201C)
 
-This occurs when smart quotes are present in the code. Fix it with:
+**`SyntaxError` on startup**
 
-**Quick Fix (One Command):**
+If you're running a version older than v2.2.1 downloaded before the fix, update to the current file. The f-string backslash issue in the HTML renderer is resolved in v2.2.1.
+
+**theHarvester not running**
+
 ```bash
-sed -i "s/"/\"/g; s/"/\"/g; s/'/'/g; s/'/'/g" PhoneBookLOCA
-chmod +x PhoneBookLOCA
+which theHarvester          # check PATH
+pip3 install theHarvester   # or: apt install theharvester
+./PhoneBookLOCA --keys      # extended OSINT status shows in banner
 ```
 
-**Or use the automatic fixer:**
-bash
-# Download the fix script
-wget https://raw.githubusercontent.com/DezTheJackal/PhoneBookLOCA/main/fix_quotes.py
+**Go scraper build fails**
 
-# Run it
-python3 fix_quotes.py
-
-# Done!
-./PhoneBookLOCA +14155552671
+```bash
+go version                  # needs 1.19+
+go build -o scraper scraper.go
 ```
 
-The fixer will:
-- ✓ Detect and count smart quotes
-- ✓ Create automatic backup
-- ✓ Replace all smart quotes with standard quotes
-- ✓ Make the file executable
-- ✓ Verify the fix worked
------
+**Poor geolocation precision**
 
-## 🤝 Contributing
+Area-code resolution gives ~50 km radius. This is a structural limitation of the approach — without a carrier HLR query or cell tower data, the tool can only resolve to the area code's assigned geography. Enable OpenCellID for slightly tighter bounds when the number's tower data is available.
 
-Contributions welcome!
+**OpenCellID returning nothing**
 
-1. Fork repository
-1. Create feature branch
-1. Make changes
-1. Update documentation
-1. Submit pull request
+```bash
+echo $OPENCELLID_API_KEY    # verify it's set
+# Key must be active — register at opencellid.org
+```
 
-**Credit yourself in CONTRIBUTORS.md**
+---
 
------
+## What this tool does and does not do
 
-## 📜 License
+**Does:**
+- Estimate location from public area-code assignment data
+- Identify carrier and number type (mobile, VoIP, fixed)
+- Detect porting indicators (VoIP type, MVNO carrier)
+- Check public social media endpoints and paste dump indexes
+- Query opted-in phone intelligence APIs
+- Generate investigative dorks and OSINT resource links
+- Export structured JSON and HTML reports
 
-MIT License - See <LICENSE>
+**Does not:**
+- Provide real-time GPS or device location
+- Access live carrier network data
+- Bypass authentication on any platform
+- Replace lawful interception procedures
+- Guarantee precision for ported numbers
 
-Free to use, modify, and distribute with attribution.
+For real-time location data, law enforcement must follow 18 U.S.C. § 2703 procedures and contact carrier legal compliance directly.
 
------
+---
 
-## 👥 Credits & Attribution
+## Legal
 
-### Creator
+MIT License. Free to use, modify, and distribute with attribution.
 
-**DezTheJackal**
+Use only on numbers you are authorized to investigate. Unauthorized use may violate computer fraud, wiretapping, and privacy laws in your jurisdiction.
 
-- Original PhoneBookLOCA concept (v1.0)
-- v2.1 Law Enforcement Geolocation
-- v2.2 Worldwide Database & Advanced Features
+---
 
-### Major Contributors
+## Credits
 
-**0xb0rn3 | 0xb0rn3**
+**DezTheJackal** — Original PhoneBookLOCA (v1.0), geolocation enhancements (v2.1), worldwide DB (v2.2)
 
-- v1.1 OSINT Features (Go scanner, API integration)
-- v2.0 Intelligence Platform (caching, reputation, ML)
+**0xb0rn3 | 0xb0rn3** — Go scraper (v1.1), OSINT API broker, social probe, theHarvester bridge, profile/risk engine, HTML reporter, SQLite backend, schema migration (v2.0, v2.2.1)
 
------
-
-## 📚 Documentation
-
-- **README.md** - This file
-- **SETUP_v2.2.md** - Installation & configuration guide
-- **CHANGELOG.md** - Version history
-- **CONTRIBUTORS.md** - Detailed contribution credits
-
------
-
-## 🔗 Links
-
-- **Repository:** https://github.com/DezTheJackal/PhoneBookLOCA
-- **Issues:** https://github.com/DezTheJackal/PhoneBookLOCA/issues
-- **Releases:** https://github.com/DezTheJackal/PhoneBookLOCA/releases
-
------
-
-## ⚠️ Important Disclaimers
-
-### For Law Enforcement
-
-This tool provides **investigative leads** using publicly available data:
-
-- Geographic approximations (not GPS)
-- Requires legal authorization for real-time tracking
-- Should supplement proper legal procedures
-- Always follow local laws and regulations
-
-### For Security Researchers
-
-Authorized use only:
-
-- ✅ Penetration testing (with permission)
-- ✅ OSINT on public information
-- ✅ Educational purposes
-- ❌ Unauthorized tracking or stalking
-- ❌ Privacy violations
-
-### For General Users
-
-- Use responsibly and ethically
-- Respect privacy and legal boundaries
-- For missing persons: Contact authorities
-- For harassment: This is illegal
-
------
+---
 
 <div align="center">
 
-## 🌍 PhoneBookLOCA v2.2 - Worldwide OSINT Intelligence
+**PhoneBookLOCA v2.2.1**
 
-**Professional-Grade Phone Number Intelligence**
+DezTheJackal · 0xb0rn3 | 0xb0rn3
 
-*200+ Countries | 40M+ Cell Towers | Advanced Analytics*
-
-**Created by: DezTheJackal**
-
-v1.1-v2.0: 0xb0rn3 | 0xb0rn3 | v2.1-v2.2: DezTheJackal
-
-⚖️ **Use responsibly. Follow legal procedures. Respect privacy.**
-
-**⭐ Star this repo if you find it useful! ⭐**
+*Use responsibly. Follow legal procedures. Respect privacy.*
 
 </div>
